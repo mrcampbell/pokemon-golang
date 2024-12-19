@@ -1,8 +1,11 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/mrcampbell/pokemon-golang/pokeapi"
 )
 
 type Species struct {
@@ -10,21 +13,26 @@ type Species struct {
 }
 
 func SpeciesFromFile(id int) Species {
-	data, err := readfile(fmt.Sprintf("%d", id))
+	s, err := readfile(fmt.Sprintf("%d", id))
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(data)
-	return Species{Name: ""}
+	return Species{Name: s.Name}
 }
 
-func readfile(path string) (string, error) {
+func readfile(path string) (pokeapi.Species, error) {
 	// read file
 	const path_dir = "data/pokemon/"
 	data, err := os.ReadFile(path_dir + path + ".json")
 	if err != nil {
-		return "", err
+		return pokeapi.Species{}, err
 	}
 
-	return string(data), nil
+	pa_species := pokeapi.Species{}
+	err = json.Unmarshal(data, &pa_species)
+	if err != nil {
+		return pokeapi.Species{}, err
+	}
+
+	return pa_species, nil
 }
