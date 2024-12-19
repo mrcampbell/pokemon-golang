@@ -9,12 +9,10 @@ import (
 
 func main() {
 	fmt.Println("Hello, World!")
-	species := app.SpeciesFromFile(1)
+	species := app.Load(1)
 	fmt.Println(species)
 
-	cache := cache.NewInMemoryCache()
+	// for later use
+	_ = cache.NewInMemoryCache()
 
-	cache.Set("key", "value")
-	value, _ := cache.Get("key")
-	fmt.Println(value)
 }
