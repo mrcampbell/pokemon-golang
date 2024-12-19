@@ -15,6 +15,10 @@ type Species struct {
 	Elements [2]element.Element
 }
 
+func Load(id int) Species {
+	return SpeciesFromFile(id)
+}
+
 func SpeciesFromFile(id int) Species {
 	s, err := readfile(fmt.Sprintf("%d", id))
 	if err != nil {
