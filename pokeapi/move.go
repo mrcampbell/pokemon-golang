@@ -1,5 +1,7 @@
 package pokeapi
 
+import "github.com/mrcampbell/pokemon-golang/pokeapi/language"
+
 type Move struct {
 	Accuracy      int `json:"accuracy"`
 	ContestCombos struct {
@@ -85,11 +87,17 @@ type Move struct {
 		} `json:"language"`
 		Name string `json:"name"`
 	} `json:"names"`
-	PastValues         []interface{} `json:"past_values"`
-	Power              int           `json:"power"`
-	Pp                 int           `json:"pp"`
-	Priority           int           `json:"priority"`
-	StatChanges        []interface{} `json:"stat_changes"`
+	PastValues  []interface{} `json:"past_values"`
+	Power       int           `json:"power"`
+	Pp          int           `json:"pp"`
+	Priority    int           `json:"priority"`
+	StatChanges []struct {
+		Change int `json:"change"`
+		Stat   struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"stat"`
+	} `json:"stat_changes"`
 	SuperContestEffect struct {
 		URL string `json:"url"`
 	} `json:"super_contest_effect"`
@@ -101,4 +109,30 @@ type Move struct {
 		Name string `json:"name"`
 		URL  string `json:"url"`
 	} `json:"type"`
+}
+
+func (m Move) GetEffectChance() int {
+	if m.EffectChance == nil {
+		return 0
+	}
+	value := m.EffectChance.(float64)
+	return int(value)
+}
+
+func (m Move) GetEffectText(language language.Language) string {
+	for _, entry := range m.EffectEntries {
+		if entry.Language.Name == string(language) {
+			return entry.Effect
+		}
+	}
+	return ""
+}
+
+func (m Move) GetFlavorText(language language.Language) string {
+	for _, entry := range m.FlavorTextEntries {
+		if entry.Language.Name == string(language) {
+			return entry.FlavorText
+		}
+	}
+	return ""
 }
