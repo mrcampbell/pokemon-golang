@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mrcampbell/pokemon-golang/app/element"
+	"github.com/mrcampbell/pokemon-golang/pkg/app/element"
 	"github.com/mrcampbell/pokemon-golang/pokeapi"
 )
 

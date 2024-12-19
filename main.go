@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/mrcampbell/pokemon-golang/app"
+	"github.com/mrcampbell/pokemon-golang/pkg/app"
 )
 
 func main() {
