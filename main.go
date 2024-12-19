@@ -9,8 +9,10 @@ import (
 
 func main() {
 	fmt.Println("Hello, World!")
-	species := app.Load(1)
-	fmt.Println(species)
+	// species := app.LoadSpecies(1)
+	// fmt.Println(species)
+	move := app.LoadMove(1)
+	fmt.Println(move)
 
 	// for later use
 	_ = cache.NewInMemoryCache()

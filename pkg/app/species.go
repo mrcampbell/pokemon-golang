@@ -24,11 +24,12 @@ type Species struct {
 	Abilities    []Ability
 }
 
-func Load(id int) Species {
-	return SpeciesFromFile(id, defaultVersion)
+// todo: move to service, just storing here for simplicity and speed of development
+func LoadSpecies(id int) Species {
+	return speciesFromFile(id, defaultVersion)
 }
 
-func SpeciesFromFile(id int, version version.Version) Species {
+func speciesFromFile(id int, version version.Version) Species {
 	source, err := readfile(fmt.Sprintf("%d", id))
 	if err != nil {
 		panic(err)

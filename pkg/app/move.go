@@ -1,6 +1,12 @@
 package app
 
-import "github.com/mrcampbell/pokemon-golang/pokeapi"
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"github.com/mrcampbell/pokemon-golang/pokeapi"
+)
 
 type MoveLearnMethod string
 
@@ -22,6 +28,21 @@ type LearnableMove struct {
 	Method MoveLearnMethod
 }
 
+// todo: move to service, just storing here for simplicity and speed of development
+func LoadMove(id int) Move {
+	source, err := readFile(fmt.Sprintf("%d", id))
+	if err != nil {
+		panic(err)
+	}
+
+	result := Move{
+		ID:   source.ID,
+		Name: source.Name,
+	}
+
+	return result
+}
+
 func LearnableMovesFromSource(source []pokeapi.LearnableMove) []LearnableMove {
 	result := make([]LearnableMove, len(source))
 	for i, move := range source {
@@ -32,4 +53,20 @@ func LearnableMovesFromSource(source []pokeapi.LearnableMove) []LearnableMove {
 		}
 	}
 	return result
+}
+
+func readFile(path string) (pokeapi.Move, error) {
+	const path_dir = "data/moves/"
+	data, err := os.ReadFile(path_dir + path + ".json")
+	if err != nil {
+		return pokeapi.Move{}, err
+	}
+
+	pa_move := pokeapi.Move{}
+	err = json.Unmarshal(data, &pa_move)
+	if err != nil {
+		return pokeapi.Move{}, err
+	}
+
+	return pa_move, nil
 }
