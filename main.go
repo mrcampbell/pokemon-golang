@@ -21,7 +21,7 @@ func main() {
 	pokemonService := game.NewPokemonService(moveService, speciesService)
 
 	pikachu := pokemonService.CreatePokemon(25, 25)
-	fmt.Println(pikachu)
+	fmt.Println(pikachu.PrintableSummary())
 	// cache := cache.NewInMemoryCache()
 	// _ = cache
 

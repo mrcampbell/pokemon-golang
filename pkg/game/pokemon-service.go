@@ -19,12 +19,18 @@ func NewPokemonService(moveService app.MoveService, speciesService app.SpeciesSe
 
 func (s *PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
 	species := s.speciesService.GetSpecies(speciesID)
+	learnedMoves := getRandomLevelUpMoveSet(species, level)
+	moveSet := []app.Move{}
+	for _, learnedMove := range learnedMoves {
+		move := s.moveService.GetMove(learnedMove.MoveID)
+		moveSet = append(moveSet, move)
+	}
 
 	result := app.Pokemon{
 		SpeciesID: speciesID,
 		Name:      species.Name,
 		Level:     level,
-		Moves:     []app.Move{},
+		Moves:     moveSet,
 		BaseStats: species.Stats,
 		IVs:       randomStats(),
 		EVs:       app.Stats{},
@@ -54,6 +60,19 @@ func CalculateStats(base app.Stats, ivs app.Stats, evs app.Stats, level int) app
 		SpDef:   calcStat(base.SpDef, ivs.SpDef, evs.SpDef, level),
 		Speed:   calcStat(base.Speed, ivs.Speed, evs.Speed, level),
 	}
+}
+
+func getRandomLevelUpMoveSet(species app.Species, level int) []app.LearnableMove {
+	rand.ShuffleLearnableMoves(species.MovesLearned)
+	moves := []app.LearnableMove{}
+	for _, move := range species.MovesLearned {
+		if move.Level <= level && move.Method == app.MoveLearnMethodLevelUp {
+			moves = append(moves, move)
+		}
+	}
+	movesLength := len(moves)
+	movesLengthOr4 := min(movesLength, 4)
+	return moves[0:movesLengthOr4]
 }
 
 func calcHP(base int, iv int, ev int, level int) int {
