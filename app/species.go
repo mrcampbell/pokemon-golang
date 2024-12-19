@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mrcampbell/pokemon-golang/app/element"
 	"github.com/mrcampbell/pokemon-golang/pokeapi"
 )
 
 type Species struct {
-	Name string
+	Name     string
+	Stats    Stats
+	Elements [2]element.Element
 }
 
 func SpeciesFromFile(id int) Species {
@@ -17,7 +20,23 @@ func SpeciesFromFile(id int) Species {
 	if err != nil {
 		panic(err)
 	}
-	return Species{Name: s.Name}
+	result := Species{Name: s.Name}
+
+	// stats
+	result.Stats = Stats{
+		HP:      s.GetStat("hp"),
+		Attack:  s.GetStat("attack"),
+		Defense: s.GetStat("defense"),
+		SpAtk:   s.GetStat("special-attack"),
+		SpDef:   s.GetStat("special-defense"),
+		Speed:   s.GetStat("speed"),
+	}
+
+	// elements
+	result.Elements[0] = s.GetElement(0)
+	result.Elements[1] = s.GetElement(1)
+
+	return result
 }
 
 func readfile(path string) (pokeapi.Species, error) {

@@ -1,5 +1,9 @@
 package pokeapi
 
+import (
+	"github.com/mrcampbell/pokemon-golang/app/element"
+)
+
 type Species struct {
 	Abilities []struct {
 		Ability struct {
@@ -257,4 +261,20 @@ type Species struct {
 		} `json:"type"`
 	} `json:"types"`
 	Weight int `json:"weight"`
+}
+
+func (s *Species) GetStat(name string) int {
+	for _, stat := range s.Stats {
+		if stat.Stat.Name == name {
+			return stat.BaseStat
+		}
+	}
+	return -1
+}
+
+func (s *Species) GetElement(slot int) element.Element {
+	if slot < len(s.Types) {
+		return element.ElementFromString(s.Types[slot].Type.Name)
+	}
+	return element.None
 }
