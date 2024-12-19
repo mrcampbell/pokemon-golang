@@ -52,12 +52,8 @@ func speciesFromFile(id int, version version.Version) Species {
 
 	// version specific data
 	result.GameIndex = source.GetGameIndex(version)
-
-	learnableMoves := source.GetMovesLearned(version)
-	result.MovesLearned = LearnableMovesFromSource(learnableMoves)
-
-	sourceAbilities := source.GetAbilities()
-	result.Abilities = AbilitiesFromSource(sourceAbilities)
+	result.MovesLearned = LearnableMovesFromSource(source, version)
+	result.Abilities = AbilitiesFromSource(source)
 
 	return result
 }

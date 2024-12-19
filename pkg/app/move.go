@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/mrcampbell/pokemon-golang/pokeapi"
 	"github.com/mrcampbell/pokemon-golang/pokeapi/language"
+	"github.com/mrcampbell/pokemon-golang/pokeapi/version"
 )
 
 const defaultLanguage = language.English
@@ -132,16 +134,27 @@ func LoadMove(id int) Move {
 	return result
 }
 
-func LearnableMovesFromSource(source []pokeapi.LearnableMove) []LearnableMove {
-	result := make([]LearnableMove, len(source))
-	for i, move := range source {
-		result[i] = LearnableMove{
-			MoveID: move.MoveID,
-			Level:  move.Level,
-			Method: MoveLearnMethod(move.Method),
+func LearnableMovesFromSource(source pokeapi.Species, version version.Version) []LearnableMove {
+	var moves []LearnableMove
+	for _, move := range source.Moves {
+		for _, versionGroupDetail := range move.VersionGroupDetails {
+			if versionGroupDetail.VersionGroup.Name == string(version) {
+				urlParts := strings.Split(move.Move.URL, "/")
+				moveIDStr := urlParts[len(urlParts)-2]
+				moveID := -1
+				if _, err := fmt.Sscanf(moveIDStr, "%d", &moveID); err != nil {
+					// todo: handle error
+					panic(err)
+				}
+				moves = append(moves, LearnableMove{
+					MoveID: moveID,
+					Method: MoveLearnMethod(versionGroupDetail.MoveLearnMethod.Name),
+					Level:  versionGroupDetail.LevelLearnedAt,
+				})
+			}
 		}
 	}
-	return result
+	return moves
 }
 
 func StatChangesFromSource(source pokeapi.Move) []StatChange {

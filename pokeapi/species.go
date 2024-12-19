@@ -1,25 +1,9 @@
 package pokeapi
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/mrcampbell/pokemon-golang/pkg/app/element"
 	"github.com/mrcampbell/pokemon-golang/pokeapi/version"
 )
-
-type LearnableMove struct {
-	MoveID int
-	Level  int
-	Method string
-}
-
-type Ability struct {
-	ID       int
-	Name     string
-	IsHidden bool
-	Slot     int
-}
 
 type Species struct {
 	Abilities []struct {
@@ -303,48 +287,4 @@ func (s *Species) GetGameIndex(versionGroup version.Version) int {
 		}
 	}
 	return -1
-}
-
-func (s *Species) GetMovesLearned(version version.Version) []LearnableMove {
-	var moves []LearnableMove
-	for _, move := range s.Moves {
-		for _, versionGroupDetail := range move.VersionGroupDetails {
-			if versionGroupDetail.VersionGroup.Name == string(version) {
-				urlParts := strings.Split(move.Move.URL, "/")
-				moveIDStr := urlParts[len(urlParts)-2]
-				moveID := -1
-				if _, err := fmt.Sscanf(moveIDStr, "%d", &moveID); err != nil {
-					// todo: handle error
-					panic(err)
-				}
-				moves = append(moves, LearnableMove{
-					MoveID: moveID,
-					Method: versionGroupDetail.MoveLearnMethod.Name,
-					Level:  versionGroupDetail.LevelLearnedAt,
-				})
-			}
-		}
-	}
-	return moves
-}
-
-func (s *Species) GetAbilities() []Ability {
-	var abilities []Ability
-	fmt.Println(s.Abilities)
-	for _, ability := range s.Abilities {
-		urlParts := strings.Split(ability.Ability.URL, "/")
-		abilityIDStr := urlParts[len(urlParts)-2]
-		abilityID := -1
-		if _, err := fmt.Sscanf(abilityIDStr, "%d", &abilityID); err != nil {
-			// todo: handle error
-			panic(err)
-		}
-		abilities = append(abilities, Ability{
-			ID:       abilityID,
-			Name:     ability.Ability.Name,
-			IsHidden: ability.IsHidden,
-			Slot:     ability.Slot,
-		})
-	}
-	return abilities
 }
