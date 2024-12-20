@@ -1,16 +1,25 @@
 -- name: PokemonByID :one
-SELECT * FROM pokemon WHERE id = $1;
-
-/* 
-with new_user as (
-  insert into user_account(name, email)
-  values ('arthur', 'some@where.com')
-  returning user_id
-)
-insert into other_table (user_id, some_column)
-select user_id, 'some value'
-from new_user;
-*/
+select 
+p.*
+, si.hp i_hp
+, si.attack i_atk
+, si.defense i_def
+, si.special_attack i_spec_atk
+, si.special_defense i_spec_def
+, si.speed i_speed
+, se.hp e_hp
+, se.attack e_atk
+, se.defense e_def
+, se.special_attack e_spec_atk
+, se.special_defense e_spec_def
+, se.speed e_speed
+from pokemon p 
+left join pokemon_stats psi on psi.pokemon_id = p.id and psi.stat_type = 'iv'
+left join pokemon_stats pse on pse.pokemon_id = p.id and pse.stat_type = 'ev'
+left join stats si on si.id = psi.stats_id
+left join stats se on se.id = pse.stats_id
+where p.id = $1;
+-- SELECT * FROM pokemon WHERE id = $1;
 
 -- name: CreateStats :one
 insert into stats(id, hp, attack, defense, special_attack, special_defense, speed)
@@ -26,30 +35,6 @@ returning id;
 insert into pokemon_stats(pokemon_id, stats_id, stat_type)
 values ($1, $2, $3)
 returning *;
-
--- with iv_stat as (
---     insert into pokemon_stats(hp, attack, defense, special_attack, special_defense, speed)
---     values (0, 0, 0, 0, 0, 0)
---     returning id
--- ), ev_stat as (
---     insert into pokemon_stats(hp, attack, defense, special_attack, special_defense, speed)
---     values (0, 0, 0, 0, 0, 0)
---     returning id
--- ), stats_stat as (
---     insert into pokemon_stats(hp, attack, defense, special_attack, special_defense, speed)
---     values (0, 0, 0, 0, 0, 0)
---     returning id
--- )
--- insert into pokemon(species_id, "level", iv_key, ev_key, stats_key)
--- values ($1, $2, (select id from iv_stat), (select id from ev_stat), (select id from stats_stat))
--- returning *;
-
-
--- INSERT INTO pokemon (
---     species_id, "level"
--- ) VALUES (
---     $1, $2
--- ) RETURNING *;
 
 -- name: ListPokemon :many
 SELECT * FROM pokemon;

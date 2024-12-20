@@ -28,6 +28,7 @@ func NewPokemonService(db *pgx.Conn, queries *sqlc.Queries, moveService app.Move
 }
 
 func (s PokemonService) SavePokemon(ctx context.Context, pokemon app.Pokemon) (uuid.UUID, error) {
+	// TODO: Isolate each step into an individual function
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("error starting transaction: %w", err)
