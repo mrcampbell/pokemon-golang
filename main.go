@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/mrcampbell/pokemon-golang/pkg/db"
 	"github.com/mrcampbell/pokemon-golang/pkg/env"
 	"github.com/mrcampbell/pokemon-golang/pkg/file"
-	"github.com/mrcampbell/pokemon-golang/pkg/game"
-	"github.com/mrcampbell/pokemon-golang/pkg/http"
 	"github.com/mrcampbell/pokemon-golang/pkg/sqlc"
 	"github.com/mrcampbell/pokemon-golang/pokeapi/language"
 	"github.com/mrcampbell/pokemon-golang/pokeapi/version"
@@ -29,21 +28,21 @@ func main() {
 	defer conn.Close(ctx)
 
 	queries := sqlc.New(conn)
-	pokemon, err := queries.ListPokemon(ctx)
-	if err != nil {
-		fmt.Printf("Error querying database: %v\n", err)
-		panic(err)
-	}
-	fmt.Println(pokemon)
 
 	speciesService := file.NewSpeciesService(defaultVersion)
 	moveService := file.NewMoveService(defaultLanguage)
-	pokemonService := game.NewPokemonService(moveService, speciesService)
+	pokemonService := db.NewPokemonService(queries, moveService, speciesService)
 
-	server := http.NewServer(&pokemonService, &speciesService, &moveService)
-	server.Run(":8080")
+	pikachu := pokemonService.CreatePokemon(25, 50)
+	print(pikachu.PrintableSummary())
+	_, err = pokemonService.SavePokemon(ctx, pikachu)
+	if err != nil {
+		fmt.Printf("Error saving pokemon: %v\n", err)
+	}
+
+	// server := http.NewServer(&pokemonService, &speciesService, &moveService)
+	// server.Run(":8080")
 
 	// cache := cache.NewInMemoryCache()
 	// _ = cache
-
 }

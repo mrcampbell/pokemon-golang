@@ -16,6 +16,20 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -25,35 +39,33 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.pokemon (
-    id integer NOT NULL,
+    id uuid NOT NULL,
     species_id integer NOT NULL,
-    level integer NOT NULL
+    level integer NOT NULL,
+    iv_key uuid NOT NULL,
+    ev_key uuid NOT NULL,
+    stats_key uuid NOT NULL
 );
 
 
 ALTER TABLE public.pokemon OWNER TO postgres;
 
 --
--- Name: pokemon_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+-- Name: pokemon_stats; Type: TABLE; Schema: public; Owner: postgres
 --
 
-CREATE SEQUENCE public.pokemon_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE TABLE public.pokemon_stats (
+    id uuid NOT NULL,
+    hp integer NOT NULL,
+    attack integer NOT NULL,
+    defense integer NOT NULL,
+    special_attack integer NOT NULL,
+    special_defense integer NOT NULL,
+    speed integer NOT NULL
+);
 
 
-ALTER TABLE public.pokemon_id_seq OWNER TO postgres;
-
---
--- Name: pokemon_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.pokemon_id_seq OWNED BY public.pokemon.id;
-
+ALTER TABLE public.pokemon_stats OWNER TO postgres;
 
 --
 -- Name: schema_migrations; Type: TABLE; Schema: public; Owner: postgres
@@ -68,13 +80,6 @@ CREATE TABLE public.schema_migrations (
 ALTER TABLE public.schema_migrations OWNER TO postgres;
 
 --
--- Name: pokemon id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.pokemon ALTER COLUMN id SET DEFAULT nextval('public.pokemon_id_seq'::regclass);
-
-
---
 -- Name: pokemon pokemon_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -83,11 +88,43 @@ ALTER TABLE ONLY public.pokemon
 
 
 --
+-- Name: pokemon_stats pokemon_stats_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pokemon_stats
+    ADD CONSTRAINT pokemon_stats_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: pokemon pokemon_ev_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pokemon
+    ADD CONSTRAINT pokemon_ev_key_fkey FOREIGN KEY (ev_key) REFERENCES public.pokemon_stats(id) ON DELETE CASCADE;
+
+
+--
+-- Name: pokemon pokemon_iv_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pokemon
+    ADD CONSTRAINT pokemon_iv_key_fkey FOREIGN KEY (iv_key) REFERENCES public.pokemon_stats(id) ON DELETE CASCADE;
+
+
+--
+-- Name: pokemon pokemon_stats_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pokemon
+    ADD CONSTRAINT pokemon_stats_key_fkey FOREIGN KEY (stats_key) REFERENCES public.pokemon_stats(id) ON DELETE CASCADE;
 
 
 --

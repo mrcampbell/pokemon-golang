@@ -7,7 +7,19 @@ tasks:
     cmds:
       - echo 'Hello World from Task!'
     silent: true
+
+  db-up:
+    cmds: 
+      - task: migrate-up
+      - task: dump-schema
+
+  db-down:
+    cmds:
+      - task: migrate-down
+      - task: dump-schema
+
   migrate-up:
+    internal: true
     cmds:
       - echo 'Migrating up...'
       - migrate -source file://db/migrations -database $POSTGRES_URL up
@@ -20,6 +32,7 @@ tasks:
   #   silent: true
 
   migrate-down:
+    internal: true
     cmds:
       - echo 'Migrating down...'
       - migrate -source file://db/migrations -database $POSTGRES_URL down

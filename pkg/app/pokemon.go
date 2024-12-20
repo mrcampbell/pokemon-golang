@@ -1,8 +1,14 @@
 package app
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+
+	"github.com/google/uuid"
+)
 
 type Pokemon struct {
+	ID        uuid.UUID
 	SpeciesID int    `json:"species_id"`
 	Name      string `json:"name"`
 	Level     int    `json:"level"`
@@ -26,4 +32,7 @@ func (p Pokemon) PrintableSummary() string {
 
 type PokemonService interface {
 	CreatePokemon(speciesID int, level int) Pokemon
+	GetPokemon(ctx context.Context, id uuid.UUID) (Pokemon, error)
+	ListPokemon(ctx context.Context) ([]Pokemon, error)
+	SavePokemon(ctx context.Context, pokemon Pokemon) (uuid.UUID, error)
 }

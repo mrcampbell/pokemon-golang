@@ -1,23 +1,62 @@
-package game
+package db
 
 import (
+	"context"
+	"fmt"
+
+	"github.com/google/uuid"
 	"github.com/mrcampbell/pokemon-golang/pkg/app"
 	"github.com/mrcampbell/pokemon-golang/pkg/rand"
+	"github.com/mrcampbell/pokemon-golang/pkg/sqlc"
 )
 
 type PokemonService struct {
+	queries        *sqlc.Queries
 	moveService    app.MoveService
 	speciesService app.SpeciesService
 }
 
-func NewPokemonService(moveService app.MoveService, speciesService app.SpeciesService) app.PokemonService {
+func NewPokemonService(queries *sqlc.Queries, moveService app.MoveService, speciesService app.SpeciesService) app.PokemonService {
 	return &PokemonService{
+		queries:        queries,
 		moveService:    moveService,
 		speciesService: speciesService,
 	}
 }
 
-func (s *PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
+func (s PokemonService) SavePokemon(ctx context.Context, pokemon app.Pokemon) (uuid.UUID, error) {
+	ivID, err := saveStats(ctx, s.queries, pokemon.IVs)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("error saving IVs: %w", err)
+	}
+	evID, err := saveStats(ctx, s.queries, pokemon.EVs)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("error saving EVs: %w", err)
+	}
+
+	pID, err := s.queries.CreatePokemon(ctx, sqlc.CreatePokemonParams{
+		ID:        uuid.New(),
+		SpeciesID: int32(pokemon.SpeciesID),
+		Level:     int32(pokemon.Level),
+		IvKey:     ivID,
+		EvKey:     evID,
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("error saving pokemon: %w", err)
+	}
+
+	return pID, nil
+}
+
+func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokemon, error) {
+	return app.Pokemon{}, nil
+}
+
+func (s PokemonService) ListPokemon(ctx context.Context) ([]app.Pokemon, error) {
+	return []app.Pokemon{}, nil
+}
+
+func (s PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
 	species := s.speciesService.GetSpecies(speciesID)
 	learnedMoves := getRandomLevelUpMoveSet(species, level)
 	moveSet := []app.Move{}
@@ -38,6 +77,22 @@ func (s *PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
 
 	result.Stats = CalculateStats(result.BaseStats, result.IVs, result.EVs, level)
 	return result
+}
+
+func saveStats(ctx context.Context, queries *sqlc.Queries, stats app.Stats) (uuid.UUID, error) {
+	iv, err := queries.CreatePokemonStats(ctx, sqlc.CreatePokemonStatsParams{
+		ID:             uuid.New(),
+		Hp:             int32(stats.HP),
+		Attack:         int32(stats.Attack),
+		Defense:        int32(stats.Defense),
+		SpecialAttack:  int32(stats.SpAtk),
+		SpecialDefense: int32(stats.SpDef),
+		Speed:          int32(stats.Speed),
+	})
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return iv.ID, nil
 }
 
 func randomStats() app.Stats {
