@@ -37,17 +37,17 @@ func main() {
 
 	// pikachu := pokemonService.CreatePokemon(25, 50)
 	// print(pikachu.PrintableSummary())
-	// _, err = pokemonService.SavePokemon(ctx, pikachu)
+	// pID, err := pokemonService.SavePokemon(ctx, pikachu)
 	// if err != nil {
 	// 	fmt.Printf("Error saving pokemon: %v\n", err)
 	// }
 
-	id, err := uuid.Parse("19aaa6ec-b51f-4042-86a0-ffc8b64c19dc")
+	pID, err := uuid.Parse("aa365050-e18c-4d9a-9897-6f4c8f58a38e")
 	if err != nil {
 		fmt.Printf("Error parsing UUID: %v\n", err)
 	}
 
-	p, err := pokemonService.GetPokemon(ctx, id)
+	p, err := pokemonService.GetPokemon(ctx, pID)
 	if err != nil {
 		fmt.Printf("Error getting pokemon: %v\n", err)
 	}

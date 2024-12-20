@@ -30,6 +30,13 @@ func (p Pokemon) PrintableSummary() string {
 	return result
 }
 
+func (p Pokemon) GetMoveID(index int) int {
+	if index < 0 || index >= len(p.Moves) {
+		return -1
+	}
+	return p.Moves[index].ID
+}
+
 type PokemonService interface {
 	CreatePokemon(speciesID int, level int) Pokemon
 	GetPokemon(ctx context.Context, id uuid.UUID) (Pokemon, error)

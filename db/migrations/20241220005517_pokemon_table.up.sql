@@ -13,7 +13,11 @@ CREATE TABLE public.stats (
 CREATE TABLE public.pokemon (
     id UUID PRIMARY KEY,
     species_id INTEGER NOT NULL,
-    "level" INTEGER NOT NULL
+    "level" INTEGER NOT NULL,
+    move_one_id INTEGER NOT NULL,
+    move_two_id INTEGER NOT NULL,
+    move_three_id INTEGER NOT NULL,
+    move_four_id INTEGER NOT NULL
 );
 
 CREATE TABLE public.pokemon_stats (

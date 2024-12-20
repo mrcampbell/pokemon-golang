@@ -26,8 +26,8 @@ values ($1, $2, $3, $4, $5, $6, $7)
 returning id;
 
 -- name: CreatePokemon :one
-insert into pokemon(id, species_id, "level")
-values ($1, $2, $3)
+insert into pokemon(id, species_id, "level", move_one_id, move_two_id, move_three_id, move_four_id)
+values ($1, $2, $3, $4, $5, $6, $7)
 returning id;
 
 -- name: CreatePokemonStats :one

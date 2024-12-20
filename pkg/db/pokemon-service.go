@@ -48,9 +48,13 @@ func (s PokemonService) SavePokemon(ctx context.Context, pokemon app.Pokemon) (u
 	}
 
 	pID, err := qtx.CreatePokemon(ctx, sqlc.CreatePokemonParams{
-		ID:        uuid.New(),
-		SpeciesID: int32(pokemon.SpeciesID),
-		Level:     int32(pokemon.Level),
+		ID:          uuid.New(),
+		SpeciesID:   int32(pokemon.SpeciesID),
+		Level:       int32(pokemon.Level),
+		MoveOneID:   int32(pokemon.GetMoveID(0)),
+		MoveTwoID:   int32(pokemon.GetMoveID(1)),
+		MoveThreeID: int32(pokemon.GetMoveID(2)),
+		MoveFourID:  int32(pokemon.GetMoveID(3)),
 	})
 
 	if err != nil {
@@ -86,10 +90,15 @@ func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokem
 	if err != nil {
 		return app.Pokemon{}, fmt.Errorf("error getting pokemon: %w", err)
 	}
+
+	moveIDS := []int{int(p.MoveOneID), int(p.MoveTwoID), int(p.MoveThreeID), int(p.MoveFourID)}
+	moves := s.loadMovesByID(moveIDS)
+
 	pokemon := app.Pokemon{
 		ID:        p.ID,
 		SpeciesID: int(p.SpeciesID),
 		Level:     int(p.Level),
+		Moves:     moves,
 		IVs: app.Stats{
 			HP:      int(p.IHp.Int32),
 			Attack:  int(p.IAttack.Int32),
@@ -138,6 +147,18 @@ func (s PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
 
 	result.Stats = CalculateStats(result.BaseStats, result.IVs, result.EVs, level)
 	return result
+}
+
+func (s PokemonService) loadMovesByID(ids []int) []app.Move {
+	moves := []app.Move{}
+	for _, id := range ids {
+		if id < 0 {
+			continue
+		}
+		move := s.moveService.GetMove(id)
+		moves = append(moves, move)
+	}
+	return moves
 }
 
 func saveStats(ctx context.Context, queries *sqlc.Queries, stats app.Stats) (uuid.UUID, error) {

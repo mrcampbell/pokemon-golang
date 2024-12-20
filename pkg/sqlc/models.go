@@ -9,9 +9,13 @@ import (
 )
 
 type Pokemon struct {
-	ID        uuid.UUID
-	SpeciesID int32
-	Level     int32
+	ID          uuid.UUID
+	SpeciesID   int32
+	Level       int32
+	MoveOneID   int32
+	MoveTwoID   int32
+	MoveThreeID int32
+	MoveFourID  int32
 }
 
 type PokemonStat struct {

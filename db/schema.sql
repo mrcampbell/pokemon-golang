@@ -41,7 +41,11 @@ SET default_table_access_method = heap;
 CREATE TABLE public.pokemon (
     id uuid NOT NULL,
     species_id integer NOT NULL,
-    level integer NOT NULL
+    level integer NOT NULL,
+    move_one_id integer NOT NULL,
+    move_two_id integer NOT NULL,
+    move_three_id integer NOT NULL,
+    move_four_id integer NOT NULL
 );
 
 

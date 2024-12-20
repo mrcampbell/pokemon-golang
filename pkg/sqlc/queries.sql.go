@@ -13,19 +13,31 @@ import (
 )
 
 const createPokemon = `-- name: CreatePokemon :one
-insert into pokemon(id, species_id, "level")
-values ($1, $2, $3)
+insert into pokemon(id, species_id, "level", move_one_id, move_two_id, move_three_id, move_four_id)
+values ($1, $2, $3, $4, $5, $6, $7)
 returning id
 `
 
 type CreatePokemonParams struct {
-	ID        uuid.UUID
-	SpeciesID int32
-	Level     int32
+	ID          uuid.UUID
+	SpeciesID   int32
+	Level       int32
+	MoveOneID   int32
+	MoveTwoID   int32
+	MoveThreeID int32
+	MoveFourID  int32
 }
 
 func (q *Queries) CreatePokemon(ctx context.Context, arg CreatePokemonParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createPokemon, arg.ID, arg.SpeciesID, arg.Level)
+	row := q.db.QueryRow(ctx, createPokemon,
+		arg.ID,
+		arg.SpeciesID,
+		arg.Level,
+		arg.MoveOneID,
+		arg.MoveTwoID,
+		arg.MoveThreeID,
+		arg.MoveFourID,
+	)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -82,7 +94,7 @@ func (q *Queries) CreateStats(ctx context.Context, arg CreateStatsParams) (uuid.
 }
 
 const listPokemon = `-- name: ListPokemon :many
-SELECT id, species_id, level FROM pokemon
+SELECT id, species_id, level, move_one_id, move_two_id, move_three_id, move_four_id FROM pokemon
 `
 
 func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
@@ -94,7 +106,15 @@ func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
 	var items []Pokemon
 	for rows.Next() {
 		var i Pokemon
-		if err := rows.Scan(&i.ID, &i.SpeciesID, &i.Level); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.SpeciesID,
+			&i.Level,
+			&i.MoveOneID,
+			&i.MoveTwoID,
+			&i.MoveThreeID,
+			&i.MoveFourID,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -107,7 +127,7 @@ func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
 
 const pokemonByID = `-- name: PokemonByID :one
 select 
-p.id, p.species_id, p.level
+p.id, p.species_id, p.level, p.move_one_id, p.move_two_id, p.move_three_id, p.move_four_id
 , si.hp i_hp
 , si.attack i_attack
 , si.defense i_defense
@@ -129,21 +149,25 @@ where p.id = $1
 `
 
 type PokemonByIDRow struct {
-	ID        uuid.UUID
-	SpeciesID int32
-	Level     int32
-	IHp       pgtype.Int4
-	IAttack   pgtype.Int4
-	IDefense  pgtype.Int4
-	ISpecAtk  pgtype.Int4
-	ISpecDef  pgtype.Int4
-	ISpeed    pgtype.Int4
-	EHp       pgtype.Int4
-	EAttack   pgtype.Int4
-	EDefense  pgtype.Int4
-	ESpecAtk  pgtype.Int4
-	ESpecDef  pgtype.Int4
-	ESpeed    pgtype.Int4
+	ID          uuid.UUID
+	SpeciesID   int32
+	Level       int32
+	MoveOneID   int32
+	MoveTwoID   int32
+	MoveThreeID int32
+	MoveFourID  int32
+	IHp         pgtype.Int4
+	IAttack     pgtype.Int4
+	IDefense    pgtype.Int4
+	ISpecAtk    pgtype.Int4
+	ISpecDef    pgtype.Int4
+	ISpeed      pgtype.Int4
+	EHp         pgtype.Int4
+	EAttack     pgtype.Int4
+	EDefense    pgtype.Int4
+	ESpecAtk    pgtype.Int4
+	ESpecDef    pgtype.Int4
+	ESpeed      pgtype.Int4
 }
 
 func (q *Queries) PokemonByID(ctx context.Context, id uuid.UUID) (PokemonByIDRow, error) {
@@ -153,6 +177,10 @@ func (q *Queries) PokemonByID(ctx context.Context, id uuid.UUID) (PokemonByIDRow
 		&i.ID,
 		&i.SpeciesID,
 		&i.Level,
+		&i.MoveOneID,
+		&i.MoveTwoID,
+		&i.MoveThreeID,
+		&i.MoveFourID,
 		&i.IHp,
 		&i.IAttack,
 		&i.IDefense,
