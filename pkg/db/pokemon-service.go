@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -32,64 +33,6 @@ func NewPokemonService(
 	}
 }
 
-func (s PokemonService) SavePokemon(ctx context.Context, pokemon app.Pokemon) (uuid.UUID, error) {
-	// TODO: Isolate each step into an individual function
-	tx, err := s.db.Begin(ctx)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("error starting transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	qtx := s.queries.WithTx(tx)
-
-	ivID, err := saveStats(ctx, qtx, pokemon.IVs)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("error saving IVs: %w", err)
-	}
-
-	evID, err := saveStats(ctx, qtx, pokemon.EVs)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("error saving EVs: %w", err)
-	}
-
-	pID, err := qtx.CreatePokemon(ctx, sqlc.CreatePokemonParams{
-		ID:          uuid.New(),
-		SpeciesID:   int32(pokemon.SpeciesID),
-		Level:       int32(pokemon.Level),
-		MoveOneID:   int32(pokemon.GetMoveID(0)),
-		MoveTwoID:   int32(pokemon.GetMoveID(1)),
-		MoveThreeID: int32(pokemon.GetMoveID(2)),
-		MoveFourID:  int32(pokemon.GetMoveID(3)),
-	})
-
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("error saving pokemon: %w", err)
-	}
-
-	_, err = qtx.CreatePokemonStats(ctx, sqlc.CreatePokemonStatsParams{
-		PokemonID: pID,
-		StatsID:   ivID,
-		StatType:  "iv",
-	})
-
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("error saving pokemon IV stats: %w", err)
-	}
-
-	_, err = qtx.CreatePokemonStats(ctx, sqlc.CreatePokemonStatsParams{
-		PokemonID: pID,
-		StatsID:   evID,
-		StatType:  "ev",
-	})
-
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("error saving pokemon EV stats: %w", err)
-	}
-
-	tx.Commit(ctx)
-	return pID, nil
-}
-
 func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokemon, error) {
 	p, err := s.queries.PokemonByID(ctx, id)
 	if err != nil {
@@ -110,7 +53,16 @@ func (s PokemonService) ListPokemon(ctx context.Context) ([]app.Pokemon, error) 
 	return pokemons, nil
 }
 
-func (s PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
+func (s PokemonService) CreatePokemon(ctx context.Context, speciesID int, level int) (app.Pokemon, error) {
+	result := s.newPokemon(speciesID, level)
+	return s.savePokemon(ctx, result)
+}
+
+func (s PokemonService) UpdatePokemon(ctx context.Context, pokemon app.Pokemon) error {
+	return errors.New("not implemented")
+}
+
+func (s PokemonService) newPokemon(speciesID, level int) app.Pokemon {
 	species := s.speciesService.GetSpecies(speciesID)
 	learnedMoves := getRandomLevelUpMoveSet(species, level)
 	moveSet := []app.Move{}
@@ -131,6 +83,65 @@ func (s PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
 
 	result.Stats = CalculateStats(result.BaseStats, result.IVs, result.EVs, level)
 	return result
+}
+
+func (s PokemonService) savePokemon(ctx context.Context, pokemon app.Pokemon) (app.Pokemon, error) {
+	// TODO: Isolate each step into an individual function
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return app.Pokemon{}, fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.queries.WithTx(tx)
+
+	ivID, err := saveStats(ctx, qtx, pokemon.IVs)
+	if err != nil {
+		return app.Pokemon{}, fmt.Errorf("error saving IVs: %w", err)
+	}
+
+	evID, err := saveStats(ctx, qtx, pokemon.EVs)
+	if err != nil {
+		return app.Pokemon{}, fmt.Errorf("error saving EVs: %w", err)
+	}
+
+	pID, err := qtx.CreatePokemon(ctx, sqlc.CreatePokemonParams{
+		ID:          uuid.New(),
+		SpeciesID:   int32(pokemon.SpeciesID),
+		Level:       int32(pokemon.Level),
+		MoveOneID:   int32(pokemon.GetMoveID(0)),
+		MoveTwoID:   int32(pokemon.GetMoveID(1)),
+		MoveThreeID: int32(pokemon.GetMoveID(2)),
+		MoveFourID:  int32(pokemon.GetMoveID(3)),
+	})
+
+	if err != nil {
+		return app.Pokemon{}, fmt.Errorf("error saving pokemon: %w", err)
+	}
+
+	_, err = qtx.CreatePokemonStats(ctx, sqlc.CreatePokemonStatsParams{
+		PokemonID: pID,
+		StatsID:   ivID,
+		StatType:  "iv",
+	})
+
+	if err != nil {
+		return app.Pokemon{}, fmt.Errorf("error saving pokemon IV stats: %w", err)
+	}
+
+	_, err = qtx.CreatePokemonStats(ctx, sqlc.CreatePokemonStatsParams{
+		PokemonID: pID,
+		StatsID:   evID,
+		StatType:  "ev",
+	})
+
+	if err != nil {
+		return app.Pokemon{}, fmt.Errorf("error saving pokemon EV stats: %w", err)
+	}
+
+	tx.Commit(ctx)
+	pokemon.ID = pID
+	return pokemon, nil
 }
 
 func (s PokemonService) mapPokemon(p sqlc.PokemonByIDRow) app.Pokemon {

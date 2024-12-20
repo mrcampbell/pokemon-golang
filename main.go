@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/kr/pretty"
 	"github.com/mrcampbell/pokemon-golang/pkg/db"
 	"github.com/mrcampbell/pokemon-golang/pkg/env"
 	"github.com/mrcampbell/pokemon-golang/pkg/file"
@@ -35,24 +33,6 @@ func main() {
 	speciesService := file.NewSpeciesService(defaultVersion)
 	moveService := file.NewMoveService(defaultLanguage)
 	pokemonService := db.NewPokemonService(conn, queries, moveService, speciesService)
-
-	// pikachu := pokemonService.CreatePokemon(25, 50)
-	// print(pikachu.PrintableSummary())
-	// pID, err := pokemonService.SavePokemon(ctx, pikachu)
-	// if err != nil {
-	// 	fmt.Printf("Error saving pokemon: %v\n", err)
-	// }
-
-	pID, err := uuid.Parse("aa365050-e18c-4d9a-9897-6f4c8f58a38e")
-	if err != nil {
-		fmt.Printf("Error parsing UUID: %v\n", err)
-	}
-
-	p, err := pokemonService.GetPokemon(ctx, pID)
-	if err != nil {
-		fmt.Printf("Error getting pokemon: %v\n", err)
-	}
-	pretty.Println(p)
 
 	server := routes.NewServer(pokemonService, speciesService, moveService)
 	server.Run(":8080")

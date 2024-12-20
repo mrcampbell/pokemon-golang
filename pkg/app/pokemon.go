@@ -38,8 +38,8 @@ func (p Pokemon) GetMoveID(index int) int {
 }
 
 type PokemonService interface {
-	CreatePokemon(speciesID int, level int) Pokemon
+	CreatePokemon(ctx context.Context, speciesID int, level int) (Pokemon, error)
 	GetPokemon(ctx context.Context, id uuid.UUID) (Pokemon, error)
 	ListPokemon(ctx context.Context) ([]Pokemon, error)
-	SavePokemon(ctx context.Context, pokemon Pokemon) (uuid.UUID, error)
+	UpdatePokemon(ctx context.Context, pokemon Pokemon) error
 }
