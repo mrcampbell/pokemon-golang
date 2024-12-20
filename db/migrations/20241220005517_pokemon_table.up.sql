@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE public.pokemon_stats (
+CREATE TABLE public.stats (
     id UUID PRIMARY KEY,
     hp INTEGER NOT NULL,
     attack INTEGER NOT NULL,
@@ -10,18 +10,19 @@ CREATE TABLE public.pokemon_stats (
     speed INTEGER NOT NULL
 );
 
--- todo, joining table
-
 CREATE TABLE public.pokemon (
     id UUID PRIMARY KEY,
     species_id INTEGER NOT NULL,
-    "level" INTEGER NOT NULL,
-    iv_key UUID NOT NULL,
-    ev_key UUID NOT NULL,
-    stats_key UUID NOT NULL,
-    FOREIGN KEY (iv_key) REFERENCES public.pokemon_stats(id) ON DELETE CASCADE,
-    FOREIGN KEY (ev_key) REFERENCES public.pokemon_stats(id) ON DELETE CASCADE,
-    FOREIGN KEY (stats_key) REFERENCES public.pokemon_stats(id) ON DELETE CASCADE
+    "level" INTEGER NOT NULL
+);
+
+CREATE TABLE public.pokemon_stats (
+    pokemon_id UUID NOT NULL,
+    stats_id UUID NOT NULL,
+    stat_type VARCHAR(4) NOT NULL, -- iv, ev, live
+    PRIMARY KEY (pokemon_id, stats_id, stat_type),
+    FOREIGN KEY (pokemon_id) REFERENCES public.pokemon(id),
+    FOREIGN KEY (stats_id) REFERENCES public.stats(id)
 );
 
 -- ALTER TABLE public.pokemon_stats 
