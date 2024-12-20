@@ -1,0 +1,19 @@
+version: '3'
+
+tasks:
+  hello:
+    cmds:
+      - echo 'Hello World from Task!'
+    silent: true
+  migrate-up:
+    cmds:
+      - echo 'Migrating up...'
+      - migrate -source file://db/migrations -database "postgres://postgres:postgres@localhost:6543/pokemon?sslmode=disable" up
+    silent: true
+
+  migrate-down:
+    cmds:
+      - echo 'Migrating down...'
+      - migrate -source file://db/migrations -database "postgres://postgres:postgres@localhost:6543/pokemon?sslmode=disable" down
+    silent: true
+
