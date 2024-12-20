@@ -31,7 +31,7 @@ func main() {
 
 	speciesService := file.NewSpeciesService(defaultVersion)
 	moveService := file.NewMoveService(defaultLanguage)
-	pokemonService := db.NewPokemonService(queries, moveService, speciesService)
+	pokemonService := db.NewPokemonService(conn, queries, moveService, speciesService)
 
 	pikachu := pokemonService.CreatePokemon(25, 50)
 	print(pikachu.PrintableSummary())

@@ -12,15 +12,20 @@ select user_id, 'some value'
 from new_user;
 */
 
--- name: CreatePokemonStats :one
-insert into pokemon_stats(id, hp, attack, defense, special_attack, special_defense, speed)
+-- name: CreateStats :one
+insert into stats(id, hp, attack, defense, special_attack, special_defense, speed)
 values ($1, $2, $3, $4, $5, $6, $7)
-returning *;
+returning id;
 
 -- name: CreatePokemon :one
-insert into pokemon(id, species_id, "level", iv_key, ev_key, stats_key)
-values ($1, $2, $3, $4, $5, $6)
+insert into pokemon(id, species_id, "level")
+values ($1, $2, $3)
 returning id;
+
+-- name: CreatePokemonStats :one
+insert into pokemon_stats(pokemon_id, stats_id, stat_type)
+values ($1, $2, $3)
+returning *;
 
 -- with iv_stat as (
 --     insert into pokemon_stats(hp, attack, defense, special_attack, special_defense, speed)

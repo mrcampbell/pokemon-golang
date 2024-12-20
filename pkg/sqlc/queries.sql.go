@@ -12,8 +12,8 @@ import (
 )
 
 const createPokemon = `-- name: CreatePokemon :one
-insert into pokemon(id, species_id, "level", iv_key, ev_key, stats_key)
-values ($1, $2, $3, $4, $5, $6)
+insert into pokemon(id, species_id, "level")
+values ($1, $2, $3)
 returning id
 `
 
@@ -21,26 +21,35 @@ type CreatePokemonParams struct {
 	ID        uuid.UUID
 	SpeciesID int32
 	Level     int32
-	IvKey     uuid.UUID
-	EvKey     uuid.UUID
-	StatsKey  uuid.UUID
 }
 
 func (q *Queries) CreatePokemon(ctx context.Context, arg CreatePokemonParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createPokemon,
-		arg.ID,
-		arg.SpeciesID,
-		arg.Level,
-		arg.IvKey,
-		arg.EvKey,
-		arg.StatsKey,
-	)
+	row := q.db.QueryRow(ctx, createPokemon, arg.ID, arg.SpeciesID, arg.Level)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
 }
 
 const createPokemonStats = `-- name: CreatePokemonStats :one
+insert into pokemon_stats(pokemon_id, stats_id, stat_type)
+values ($1, $2, $3)
+returning pokemon_id, stats_id, stat_type
+`
+
+type CreatePokemonStatsParams struct {
+	PokemonID uuid.UUID
+	StatsID   uuid.UUID
+	StatType  string
+}
+
+func (q *Queries) CreatePokemonStats(ctx context.Context, arg CreatePokemonStatsParams) (PokemonStat, error) {
+	row := q.db.QueryRow(ctx, createPokemonStats, arg.PokemonID, arg.StatsID, arg.StatType)
+	var i PokemonStat
+	err := row.Scan(&i.PokemonID, &i.StatsID, &i.StatType)
+	return i, err
+}
+
+const createStats = `-- name: CreateStats :one
 /* 
 with new_user as (
   insert into user_account(name, email)
@@ -52,12 +61,12 @@ select user_id, 'some value'
 from new_user;
 */
 
-insert into pokemon_stats(id, hp, attack, defense, special_attack, special_defense, speed)
+insert into stats(id, hp, attack, defense, special_attack, special_defense, speed)
 values ($1, $2, $3, $4, $5, $6, $7)
-returning id, hp, attack, defense, special_attack, special_defense, speed
+returning id
 `
 
-type CreatePokemonStatsParams struct {
+type CreateStatsParams struct {
 	ID             uuid.UUID
 	Hp             int32
 	Attack         int32
@@ -67,8 +76,8 @@ type CreatePokemonStatsParams struct {
 	Speed          int32
 }
 
-func (q *Queries) CreatePokemonStats(ctx context.Context, arg CreatePokemonStatsParams) (PokemonStat, error) {
-	row := q.db.QueryRow(ctx, createPokemonStats,
+func (q *Queries) CreateStats(ctx context.Context, arg CreateStatsParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createStats,
 		arg.ID,
 		arg.Hp,
 		arg.Attack,
@@ -77,24 +86,16 @@ func (q *Queries) CreatePokemonStats(ctx context.Context, arg CreatePokemonStats
 		arg.SpecialDefense,
 		arg.Speed,
 	)
-	var i PokemonStat
-	err := row.Scan(
-		&i.ID,
-		&i.Hp,
-		&i.Attack,
-		&i.Defense,
-		&i.SpecialAttack,
-		&i.SpecialDefense,
-		&i.Speed,
-	)
-	return i, err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const listPokemon = `-- name: ListPokemon :many
 
 
 
-SELECT id, species_id, level, iv_key, ev_key, stats_key FROM pokemon
+SELECT id, species_id, level FROM pokemon
 `
 
 // with iv_stat as (
@@ -137,14 +138,7 @@ func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
 	var items []Pokemon
 	for rows.Next() {
 		var i Pokemon
-		if err := rows.Scan(
-			&i.ID,
-			&i.SpeciesID,
-			&i.Level,
-			&i.IvKey,
-			&i.EvKey,
-			&i.StatsKey,
-		); err != nil {
+		if err := rows.Scan(&i.ID, &i.SpeciesID, &i.Level); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -156,19 +150,12 @@ func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
 }
 
 const pokemonByID = `-- name: PokemonByID :one
-SELECT id, species_id, level, iv_key, ev_key, stats_key FROM pokemon WHERE id = $1
+SELECT id, species_id, level FROM pokemon WHERE id = $1
 `
 
 func (q *Queries) PokemonByID(ctx context.Context, id uuid.UUID) (Pokemon, error) {
 	row := q.db.QueryRow(ctx, pokemonByID, id)
 	var i Pokemon
-	err := row.Scan(
-		&i.ID,
-		&i.SpeciesID,
-		&i.Level,
-		&i.IvKey,
-		&i.EvKey,
-		&i.StatsKey,
-	)
+	err := row.Scan(&i.ID, &i.SpeciesID, &i.Level)
 	return i, err
 }
