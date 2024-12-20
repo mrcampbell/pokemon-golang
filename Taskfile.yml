@@ -1,5 +1,7 @@
 version: '3'
 
+dotenv: ['.env.local', '.env']
+
 tasks:
   hello:
     cmds:
@@ -8,12 +10,17 @@ tasks:
   migrate-up:
     cmds:
       - echo 'Migrating up...'
-      - migrate -source file://db/migrations -database "postgres://postgres:postgres@localhost:6543/pokemon?sslmode=disable" up
+      - migrate -source file://db/migrations -database $POSTGRES_URL up
     silent: true
 
   migrate-down:
     cmds:
       - echo 'Migrating down...'
-      - migrate -source file://db/migrations -database "postgres://postgres:postgres@localhost:6543/pokemon?sslmode=disable" down
+      - migrate -source file://db/migrations -database $POSTGRES_URL down
     silent: true
 
+  dump-schema:
+    cmds:
+      - echo 'Dumping schema...'
+      - pg_dump -s $POSTGRES_URL > db/schema.sql
+    silent: true
