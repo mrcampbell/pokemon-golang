@@ -10,6 +10,7 @@ import (
 	"github.com/mrcampbell/pokemon-golang/pkg/db"
 	"github.com/mrcampbell/pokemon-golang/pkg/env"
 	"github.com/mrcampbell/pokemon-golang/pkg/file"
+	"github.com/mrcampbell/pokemon-golang/pkg/http/routes"
 	"github.com/mrcampbell/pokemon-golang/pkg/sqlc"
 	"github.com/mrcampbell/pokemon-golang/pokeapi/language"
 	"github.com/mrcampbell/pokemon-golang/pokeapi/version"
@@ -53,8 +54,8 @@ func main() {
 	}
 	pretty.Println(p)
 
-	// server := http.NewServer(&pokemonService, &speciesService, &moveService)
-	// server.Run(":8080")
+	server := routes.NewServer(pokemonService, speciesService, moveService)
+	server.Run(":8080")
 
 	// cache := cache.NewInMemoryCache()
 	// _ = cache

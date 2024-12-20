@@ -91,6 +91,8 @@ func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokem
 		return app.Pokemon{}, fmt.Errorf("error getting pokemon: %w", err)
 	}
 
+	species := s.speciesService.GetSpecies(int(p.SpeciesID))
+
 	moveIDS := []int{int(p.MoveOneID), int(p.MoveTwoID), int(p.MoveThreeID), int(p.MoveFourID)}
 	moves := s.loadMovesByID(moveIDS)
 
@@ -99,6 +101,8 @@ func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokem
 		SpeciesID: int(p.SpeciesID),
 		Level:     int(p.Level),
 		Moves:     moves,
+		Name:      species.Name,
+		BaseStats: species.Stats,
 		IVs: app.Stats{
 			HP:      int(p.IHp.Int32),
 			Attack:  int(p.IAttack.Int32),
@@ -117,13 +121,51 @@ func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokem
 		},
 	}
 
-	pokemon.Stats = CalculateStats(s.speciesService.GetSpecies(pokemon.SpeciesID).Stats, pokemon.IVs, pokemon.EVs, pokemon.Level)
+	pokemon.Stats = CalculateStats(pokemon.BaseStats, pokemon.IVs, pokemon.EVs, pokemon.Level)
 
 	return pokemon, nil
 }
 
 func (s PokemonService) ListPokemon(ctx context.Context) ([]app.Pokemon, error) {
-	return []app.Pokemon{}, nil
+	list, err := s.queries.ListPokemon(ctx)
+	if err != nil {
+		return []app.Pokemon{}, fmt.Errorf("error listing pokemon: %w", err)
+	}
+
+	pokemons := []app.Pokemon{}
+	for _, item := range list {
+		species := s.speciesService.GetSpecies(int(item.SpeciesID))
+		moveIDS := []int{int(item.MoveOneID), int(item.MoveTwoID), int(item.MoveThreeID), int(item.MoveFourID)}
+		moves := s.loadMovesByID(moveIDS)
+		pokemon := app.Pokemon{
+			ID:        item.ID,
+			SpeciesID: int(item.SpeciesID),
+			Level:     int(item.Level),
+			Name:      species.Name,
+			Moves:     moves,
+			IVs: app.Stats{
+				HP:      int(item.IHp.Int32),
+				Attack:  int(item.IAttack.Int32),
+				Defense: int(item.IDefense.Int32),
+				SpAtk:   int(item.ISpecAtk.Int32),
+				SpDef:   int(item.ISpecDef.Int32),
+				Speed:   int(item.ISpeed.Int32),
+			},
+			EVs: app.Stats{
+				HP:      int(item.EHp.Int32),
+				Attack:  int(item.EAttack.Int32),
+				Defense: int(item.EDefense.Int32),
+				SpAtk:   int(item.ESpecAtk.Int32),
+				SpDef:   int(item.ESpecDef.Int32),
+				Speed:   int(item.ESpeed.Int32),
+			},
+			BaseStats: species.Stats,
+		}
+		pokemon.Stats = CalculateStats(pokemon.BaseStats, pokemon.IVs, pokemon.EVs, pokemon.Level)
+		pokemons = append(pokemons, pokemon)
+	}
+
+	return pokemons, nil
 }
 
 func (s PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {

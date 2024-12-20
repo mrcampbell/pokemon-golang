@@ -94,18 +94,58 @@ func (q *Queries) CreateStats(ctx context.Context, arg CreateStatsParams) (uuid.
 }
 
 const listPokemon = `-- name: ListPokemon :many
-SELECT id, species_id, level, move_one_id, move_two_id, move_three_id, move_four_id FROM pokemon
+select 
+p.id, p.species_id, p.level, p.move_one_id, p.move_two_id, p.move_three_id, p.move_four_id
+, si.hp i_hp
+, si.attack i_attack
+, si.defense i_defense
+, si.special_attack i_spec_atk
+, si.special_defense i_spec_def
+, si.speed i_speed
+, se.hp e_hp
+, se.attack e_attack
+, se.defense e_defense
+, se.special_attack e_spec_atk
+, se.special_defense e_spec_def
+, se.speed e_speed
+from pokemon p 
+left join pokemon_stats psi on psi.pokemon_id = p.id and psi.stat_type = 'iv'
+left join pokemon_stats pse on pse.pokemon_id = p.id and pse.stat_type = 'ev'
+left join stats si on si.id = psi.stats_id
+left join stats se on se.id = pse.stats_id
 `
 
-func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
+type ListPokemonRow struct {
+	ID          uuid.UUID
+	SpeciesID   int32
+	Level       int32
+	MoveOneID   int32
+	MoveTwoID   int32
+	MoveThreeID int32
+	MoveFourID  int32
+	IHp         pgtype.Int4
+	IAttack     pgtype.Int4
+	IDefense    pgtype.Int4
+	ISpecAtk    pgtype.Int4
+	ISpecDef    pgtype.Int4
+	ISpeed      pgtype.Int4
+	EHp         pgtype.Int4
+	EAttack     pgtype.Int4
+	EDefense    pgtype.Int4
+	ESpecAtk    pgtype.Int4
+	ESpecDef    pgtype.Int4
+	ESpeed      pgtype.Int4
+}
+
+func (q *Queries) ListPokemon(ctx context.Context) ([]ListPokemonRow, error) {
 	rows, err := q.db.Query(ctx, listPokemon)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Pokemon
+	var items []ListPokemonRow
 	for rows.Next() {
-		var i Pokemon
+		var i ListPokemonRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.SpeciesID,
@@ -114,6 +154,18 @@ func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
 			&i.MoveTwoID,
 			&i.MoveThreeID,
 			&i.MoveFourID,
+			&i.IHp,
+			&i.IAttack,
+			&i.IDefense,
+			&i.ISpecAtk,
+			&i.ISpecDef,
+			&i.ISpeed,
+			&i.EHp,
+			&i.EAttack,
+			&i.EDefense,
+			&i.ESpecAtk,
+			&i.ESpecDef,
+			&i.ESpeed,
 		); err != nil {
 			return nil, err
 		}
