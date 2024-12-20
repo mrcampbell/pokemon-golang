@@ -3,8 +3,8 @@ sql:
   - engine: "postgresql"
     queries: "db/queries.sql"
     schema: "db/schema.sql"
-    database:
-      uri: "${POSTGRES_URL}"
+    # database:
+      # uri: "${POSTGRES_URL}"
     gen:
       go:
         package: "sqlc"

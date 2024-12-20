@@ -7,3 +7,6 @@ INSERT INTO pokemon (
 ) VALUES (
     $1, $2
 ) RETURNING *;
+
+-- name: ListPokemon :many
+SELECT * FROM pokemon;

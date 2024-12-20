@@ -29,6 +29,30 @@ func (q *Queries) CreatePokemon(ctx context.Context, arg CreatePokemonParams) (P
 	return i, err
 }
 
+const listPokemon = `-- name: ListPokemon :many
+SELECT id, species_id, level FROM pokemon
+`
+
+func (q *Queries) ListPokemon(ctx context.Context) ([]Pokemon, error) {
+	rows, err := q.db.Query(ctx, listPokemon)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Pokemon
+	for rows.Next() {
+		var i Pokemon
+		if err := rows.Scan(&i.ID, &i.SpeciesID, &i.Level); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const pokemonByID = `-- name: PokemonByID :one
 SELECT id, species_id, level FROM pokemon WHERE id = $1
 `
