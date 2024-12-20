@@ -10,6 +10,7 @@ This project uses `golang-migrate` for database schema migrations, and `sqlc` fo
 
 [Instructions to install the `golang-migrate` cli can be found here](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate)
 
+[Instructions on how to install `sqlc` can be found here](https://docs.sqlc.dev/en/stable/overview/install.html)
 
 ### DB Migration Instructions
 

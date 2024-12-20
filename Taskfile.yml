@@ -24,3 +24,10 @@ tasks:
       - echo 'Dumping schema...'
       - pg_dump -s $POSTGRES_URL > db/schema.sql
     silent: true
+
+  sqlc-gen:
+    cmds:
+      - echo 'Generating SQLC...'
+      - POSTGRES_URL=$POSTGRES_URL sqlc generate
+      - echo $DB_URL
+    silent: true
