@@ -19,7 +19,7 @@ func (p Pokemon) PrintableSummary() string {
 	result += fmt.Sprintf("Stats: %v\n", p.Stats)
 	result += "Moves: \n"
 	for _, move := range p.Moves {
-		result += " - " + move.Name + "\n"
+		result += move.PrintableSummary()
 	}
 	return result
 }
