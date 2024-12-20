@@ -6,5 +6,6 @@ func (s Server) GetRoutes() *gin.Engine {
 	r := gin.Default()
 	applyHello(r.Group("/"))
 	s.applyPokemon(r.Group("/api"))
+	applyClient(r)
 	return r
 }
