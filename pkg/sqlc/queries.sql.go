@@ -51,7 +51,6 @@ func (q *Queries) CreatePokemonStats(ctx context.Context, arg CreatePokemonStats
 }
 
 const createStats = `-- name: CreateStats :one
-
 insert into stats(id, hp, attack, defense, special_attack, special_defense, speed)
 values ($1, $2, $3, $4, $5, $6, $7)
 returning id
@@ -67,7 +66,6 @@ type CreateStatsParams struct {
 	Speed          int32
 }
 
-// SELECT * FROM pokemon WHERE id = $1;
 func (q *Queries) CreateStats(ctx context.Context, arg CreateStatsParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, createStats,
 		arg.ID,
@@ -111,14 +109,14 @@ const pokemonByID = `-- name: PokemonByID :one
 select 
 p.id, p.species_id, p.level
 , si.hp i_hp
-, si.attack i_atk
-, si.defense i_def
+, si.attack i_attack
+, si.defense i_defense
 , si.special_attack i_spec_atk
 , si.special_defense i_spec_def
 , si.speed i_speed
 , se.hp e_hp
-, se.attack e_atk
-, se.defense e_def
+, se.attack e_attack
+, se.defense e_defense
 , se.special_attack e_spec_atk
 , se.special_defense e_spec_def
 , se.speed e_speed
@@ -135,14 +133,14 @@ type PokemonByIDRow struct {
 	SpeciesID int32
 	Level     int32
 	IHp       pgtype.Int4
-	IAtk      pgtype.Int4
-	IDef      pgtype.Int4
+	IAttack   pgtype.Int4
+	IDefense  pgtype.Int4
 	ISpecAtk  pgtype.Int4
 	ISpecDef  pgtype.Int4
 	ISpeed    pgtype.Int4
 	EHp       pgtype.Int4
-	EAtk      pgtype.Int4
-	EDef      pgtype.Int4
+	EAttack   pgtype.Int4
+	EDefense  pgtype.Int4
 	ESpecAtk  pgtype.Int4
 	ESpecDef  pgtype.Int4
 	ESpeed    pgtype.Int4
@@ -156,14 +154,14 @@ func (q *Queries) PokemonByID(ctx context.Context, id uuid.UUID) (PokemonByIDRow
 		&i.SpeciesID,
 		&i.Level,
 		&i.IHp,
-		&i.IAtk,
-		&i.IDef,
+		&i.IAttack,
+		&i.IDefense,
 		&i.ISpecAtk,
 		&i.ISpecDef,
 		&i.ISpeed,
 		&i.EHp,
-		&i.EAtk,
-		&i.EDef,
+		&i.EAttack,
+		&i.EDefense,
 		&i.ESpecAtk,
 		&i.ESpecDef,
 		&i.ESpeed,

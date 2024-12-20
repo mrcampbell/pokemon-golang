@@ -82,7 +82,35 @@ func (s PokemonService) SavePokemon(ctx context.Context, pokemon app.Pokemon) (u
 }
 
 func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokemon, error) {
-	return app.Pokemon{}, nil
+	p, err := s.queries.PokemonByID(ctx, id)
+	if err != nil {
+		return app.Pokemon{}, fmt.Errorf("error getting pokemon: %w", err)
+	}
+	pokemon := app.Pokemon{
+		ID:        p.ID,
+		SpeciesID: int(p.SpeciesID),
+		Level:     int(p.Level),
+		IVs: app.Stats{
+			HP:      int(p.IHp.Int32),
+			Attack:  int(p.IAttack.Int32),
+			Defense: int(p.IDefense.Int32),
+			SpAtk:   int(p.ISpecAtk.Int32),
+			SpDef:   int(p.ISpecDef.Int32),
+			Speed:   int(p.ISpeed.Int32),
+		},
+		EVs: app.Stats{
+			HP:      int(p.EHp.Int32),
+			Attack:  int(p.EAttack.Int32),
+			Defense: int(p.EDefense.Int32),
+			SpAtk:   int(p.ESpecAtk.Int32),
+			SpDef:   int(p.ESpecDef.Int32),
+			Speed:   int(p.ESpeed.Int32),
+		},
+	}
+
+	pokemon.Stats = CalculateStats(s.speciesService.GetSpecies(pokemon.SpeciesID).Stats, pokemon.IVs, pokemon.EVs, pokemon.Level)
+
+	return pokemon, nil
 }
 
 func (s PokemonService) ListPokemon(ctx context.Context) ([]app.Pokemon, error) {
