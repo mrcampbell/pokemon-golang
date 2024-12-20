@@ -19,6 +19,8 @@ func LoadEnv() {
 	err := godotenv.Load(".env.local")
 	if err != nil {
 		log.Fatal("Error loading .env file")
+
+		// we panic here because we can't continue without the env file
 		panic(err)
 	}
 
@@ -31,6 +33,8 @@ func LoadEnv() {
 	port, err := strconv.Atoi(os.Getenv("POSTGRES_PORT"))
 	if err != nil {
 		log.Fatal("Error parsing POSTGRES_PORT")
+
+		// we panic here because we can't continue without the port
 		panic(err)
 	}
 	POSTGRES_PORT = uint16(port)

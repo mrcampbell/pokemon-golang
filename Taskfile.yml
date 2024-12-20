@@ -13,6 +13,12 @@ tasks:
       - migrate -source file://db/migrations -database $POSTGRES_URL up
     silent: true
 
+  # migrate-up-force:
+  #   cmds:
+  #     - echo 'Migrating up...'
+  #     - migrate -source file://db/migrations -database $POSTGRES_URL force 20241220005517
+  #   silent: true
+
   migrate-down:
     cmds:
       - echo 'Migrating down...'
