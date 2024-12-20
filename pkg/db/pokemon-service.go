@@ -18,7 +18,12 @@ type PokemonService struct {
 	speciesService app.SpeciesService
 }
 
-func NewPokemonService(db *pgx.Conn, queries *sqlc.Queries, moveService app.MoveService, speciesService app.SpeciesService) app.PokemonService {
+func NewPokemonService(
+	db *pgx.Conn,
+	queries *sqlc.Queries,
+	moveService app.MoveService,
+	speciesService app.SpeciesService,
+) app.PokemonService {
 	return &PokemonService{
 		db:             db,
 		queries:        queries,
@@ -90,7 +95,45 @@ func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokem
 	if err != nil {
 		return app.Pokemon{}, fmt.Errorf("error getting pokemon: %w", err)
 	}
+	pokemon := s.mapPokemon(p)
 
+	return pokemon, nil
+}
+
+func (s PokemonService) ListPokemon(ctx context.Context) ([]app.Pokemon, error) {
+	list, err := s.queries.ListPokemon(ctx)
+	if err != nil {
+		return []app.Pokemon{}, fmt.Errorf("error listing pokemon: %w", err)
+	}
+
+	pokemons := s.mapPokemonList(list)
+	return pokemons, nil
+}
+
+func (s PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
+	species := s.speciesService.GetSpecies(speciesID)
+	learnedMoves := getRandomLevelUpMoveSet(species, level)
+	moveSet := []app.Move{}
+	for _, learnedMove := range learnedMoves {
+		move := s.moveService.GetMove(learnedMove.MoveID)
+		moveSet = append(moveSet, move)
+	}
+
+	result := app.Pokemon{
+		SpeciesID: speciesID,
+		Name:      species.Name,
+		Level:     level,
+		Moves:     moveSet,
+		BaseStats: species.Stats,
+		IVs:       randomStats(),
+		EVs:       app.Stats{},
+	}
+
+	result.Stats = CalculateStats(result.BaseStats, result.IVs, result.EVs, level)
+	return result
+}
+
+func (s PokemonService) mapPokemon(p sqlc.PokemonByIDRow) app.Pokemon {
 	species := s.speciesService.GetSpecies(int(p.SpeciesID))
 
 	moveIDS := []int{int(p.MoveOneID), int(p.MoveTwoID), int(p.MoveThreeID), int(p.MoveFourID)}
@@ -122,16 +165,10 @@ func (s PokemonService) GetPokemon(ctx context.Context, id uuid.UUID) (app.Pokem
 	}
 
 	pokemon.Stats = CalculateStats(pokemon.BaseStats, pokemon.IVs, pokemon.EVs, pokemon.Level)
-
-	return pokemon, nil
+	return pokemon
 }
 
-func (s PokemonService) ListPokemon(ctx context.Context) ([]app.Pokemon, error) {
-	list, err := s.queries.ListPokemon(ctx)
-	if err != nil {
-		return []app.Pokemon{}, fmt.Errorf("error listing pokemon: %w", err)
-	}
-
+func (s PokemonService) mapPokemonList(list []sqlc.ListPokemonRow) []app.Pokemon {
 	pokemons := []app.Pokemon{}
 	for _, item := range list {
 		species := s.speciesService.GetSpecies(int(item.SpeciesID))
@@ -164,31 +201,7 @@ func (s PokemonService) ListPokemon(ctx context.Context) ([]app.Pokemon, error) 
 		pokemon.Stats = CalculateStats(pokemon.BaseStats, pokemon.IVs, pokemon.EVs, pokemon.Level)
 		pokemons = append(pokemons, pokemon)
 	}
-
-	return pokemons, nil
-}
-
-func (s PokemonService) CreatePokemon(speciesID int, level int) app.Pokemon {
-	species := s.speciesService.GetSpecies(speciesID)
-	learnedMoves := getRandomLevelUpMoveSet(species, level)
-	moveSet := []app.Move{}
-	for _, learnedMove := range learnedMoves {
-		move := s.moveService.GetMove(learnedMove.MoveID)
-		moveSet = append(moveSet, move)
-	}
-
-	result := app.Pokemon{
-		SpeciesID: speciesID,
-		Name:      species.Name,
-		Level:     level,
-		Moves:     moveSet,
-		BaseStats: species.Stats,
-		IVs:       randomStats(),
-		EVs:       app.Stats{},
-	}
-
-	result.Stats = CalculateStats(result.BaseStats, result.IVs, result.EVs, level)
-	return result
+	return pokemons
 }
 
 func (s PokemonService) loadMovesByID(ids []int) []app.Move {
